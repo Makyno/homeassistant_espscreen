@@ -28,6 +28,7 @@ PLURAL_RULES = {
                  'return t >= 2 && t <= 4 && (h < 12 || h > 14) ? 1 : 2;',
     'east_slavic': 'int t = n % 10, h = n % 100; if (t == 1 && h != 11) return 0; '
                    'return t >= 2 && t <= 4 && (h < 12 || h > 14) ? 1 : 2;',
+    'west_slavic': 'return n == 1 ? 0 : n >= 2 && n <= 4 ? 1 : 2;',
     'none': 'return 0;',
 }
 
