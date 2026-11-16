@@ -60,7 +60,7 @@ useResizeObserver(line, () => measure());
       :width="screensaver.glassSize.width" :height="screensaver.glassSize.height" :at="at" v-bind="words" />
   </div>
   <div v-else class="saver-glass" aria-hidden="true" :style="{ aspectRatio: screensaver.glassRatio, height: `${height}px`, '--glass-h': `${height}px` }">
-    <span class="saver-glass-time">{{ screensaver.clockPreview.time }}</span>
+    <span class="saver-glass-time" :style="screensaver.saver?.ink ? { color: screensaver.saver.ink } : {}">{{ screensaver.clockPreview.time }}</span>
     <span class="saver-glass-date">{{ screensaver.clockPreview.date }}</span>
     <span ref="line" class="saver-glass-line">
       <span v-if="temperature">{{ temperature }}</span>

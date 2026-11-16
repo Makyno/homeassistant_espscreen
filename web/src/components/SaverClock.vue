@@ -105,6 +105,11 @@ const pickFace = (kind: SaverFaceKind) => screensaver.changeSaver({ face: kind }
 // Glass and Bauhaus show the face alone; the temperature and the entities stand on Classic and the digital clock, and a
 // plugin's face gets them as the digital clock has them.
 const withRow = computed(() => Boolean(pluginFace.value) || faceKind.value === "digital" || faceKind.value === "classic");
+// The digital clock's digits in a colour of one's own (Slovak fork, `ink`): a few that suit a dark bedroom, or any other.
+const digital = computed(() => !pluginFace.value && faceKind.value === "digital");
+const ink = computed(() => screensaver.saver?.ink || "");
+const INKS = ["", "#ff8c00", "#ff3b30", "#ffcc00", "#34c759", "#008dbe", "#af52de"];
+const pickInk = (value: string) => screensaver.changeSaver({ ink: value.toLowerCase() });
 
 // The clock's place among the steps, as its own drawer had it.
 const place = computed(() => screensaver.stepPlace("clock"));
@@ -170,7 +175,7 @@ function move(step: number) { if (screensaver.moveSaverItem(props.index, props.i
             <button v-for="c in faceChoices" :key="c.kind" type="button" role="radio" class="face-pick" :data-face="c.kind"
               :aria-checked="!pluginFace && faceKind === c.kind ? 'true' : 'false'" @click="pickFace(c.kind)">
               <span class="face-thumb" :style="{ aspectRatio: screensaver.glassRatio }">
-                <span v-if="c.kind === 'digital'" class="face-digital">{{ screensaver.clockPreview.time }}</span>
+                <span v-if="c.kind === 'digital'" class="face-digital" :style="ink ? { color: ink } : {}">{{ screensaver.clockPreview.time }}</span>
                 <SaverFace v-else :kind="c.kind" :dark="screensaver.faceDark" :numerals="numerals" :seconds="false"
                   :width="screensaver.glassSize.width" :height="screensaver.glassSize.height" :at="at" />
               </span>
@@ -199,6 +204,17 @@ function move(step: number) { if (screensaver.moveSaverItem(props.index, props.i
           </PropRow>
           <SwitchRow :label="T('seconds')" :model-value="screensaver.saver.seconds ?? true" @update:model-value="(on: boolean) => screensaver.changeSaver({ seconds: on })" />
         </template>
+        <PropRow v-if="digital" :label="T('ink')" icon="palette-outline" stack>
+          <div class="ink-picks" id="saver-ink" role="radiogroup" :aria-label="T('ink')">
+            <button v-for="c in INKS" :key="c || 'white'" type="button" role="radio" class="ink-pick" :data-ink="c || 'white'"
+              :aria-checked="ink === c ? 'true' : 'false'" :title="c ? c : T('ink_white')" :style="{ background: c || '#ffffff' }" @click="pickInk(c)"></button>
+            <label class="ink-pick ink-own" :aria-checked="ink && !INKS.includes(ink) ? 'true' : 'false'" :title="T('ink_own')"
+              :style="ink && !INKS.includes(ink) ? { background: ink } : {}">
+              <Icon v-if="!ink || INKS.includes(ink)" name="plus" />
+              <input type="color" :aria-label="T('ink_own')" :value="ink || '#ffffff'" @change="pickInk(($event.target as HTMLInputElement).value)" />
+            </label>
+          </div>
+        </PropRow>
         <PropRow v-if="withRow" :label="T('temperature')" stack>
           <UiSelect id="saver-weather" :model-value="screensaver.saver.weather ?? 'auto'" :options="screensaver.weatherChoices" @update:model-value="(value: string) => screensaver.changeSaver({ weather: value })" />
         </PropRow>
@@ -233,5 +249,11 @@ function move(step: number) { if (screensaver.moveSaverItem(props.index, props.i
 .face-thumb { display: grid; place-items: center; width: 100%; max-height: 72px; border-radius: 4px; overflow: hidden; background: #000; }
 .face-plugin { color: #fff; font-size: 20px; }
 .face-digital { color: #fff; font-size: 13px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.ink-picks { display: flex; flex-wrap: wrap; gap: 8px; }
+.ink-pick { position: relative; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border-radius: 50%;
+  border: 1px solid var(--line); cursor: pointer; color: var(--ink-2); background: var(--surface); }
+.ink-pick[aria-checked="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); }
+.ink-pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ink-own input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 .face-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 </style>

@@ -64,6 +64,11 @@ the camera or the clock, since a speaker stays paused in Home Assistant for days
   or PM stands after the time. Small in the middle at the bottom is the outside temperature: Home Assistant's forecast
   for its home (Met.no's, else its first weather entity) unless you choose one under the clock in the editor (or none), whole degrees in the unit Home
   Assistant is set to (app 0.4.52).
+  **Digits colour** (Slovak fork): in the drawer of Clock, with the digital face, the digits can take another colour
+  than white (a few ready ones or any other); the date, AM or PM and the bottom row follow in a softer shade of it.
+  The choice keeps it as `ink` (`#rrggbb`, '' for white) and the clock's message carries it as `ci` (six hex digits);
+  the screen reads it in `page_receiver.cpp` into `SaverChoice::ink` and `saver_clock_draw` draws with it. Firmware
+  without it reads past `ci` and stays white.
 
 **Entities on the clock** (app 0.4.81, firmware 0.50.0). In the drawer of Clock, under the temperature, **Add an
 entity** puts up to four entities in the same line as the temperature: a sensor, a door, a lamp, anything the top bar

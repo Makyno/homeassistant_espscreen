@@ -71,11 +71,14 @@ MEDIA_SOURCE = re.compile(r'^media-source://[^\s]{1,500}$')
 FACES = ('digital', 'glass', 'classic', 'bauhaus')
 LOOKS = ('dark', 'light', 'auto')
 NUMERALS = (0, 4, 12)
+# `ink` (Slovak fork): the colour of the digital clock's digits, '#rrggbb', or '' for the white the screen draws by
+# itself. Sent as `ci` (six hex digits) with the clock; firmware without it reads past it and stays white.
+INK = re.compile(r'^#[0-9a-f]{6}$')
 # `media_face`, `photos_face` (plugin API 0.14): a plugin's face for that step, '' for the screen's own; `face` takes a
 # plugin's face of the clock as well. `plugins`: per plugin face or step its options as the editor set them and the entity
 # it belongs to (a step of a plugin of an entity), {key: {'options': {...}, 'entity': ''}}.
 DEFAULT = {'show': False, 'media': '', 'camera': '', 'order': list(KINDS), 'off': [], 'weather': 'auto', 'more': [],
-           'items': [], 'face': 'digital', 'numerals': 4, 'seconds': True, 'look': 'dark', 'photos': dict(PHOTOS_DEFAULT),
+           'items': [], 'face': 'digital', 'numerals': 4, 'seconds': True, 'look': 'dark', 'ink': '', 'photos': dict(PHOTOS_DEFAULT),
            'media_face': '', 'photos_face': '', 'plugins': {}}
 ITEMS_MAX = 4
 MORE_PLAYERS = 3
@@ -132,6 +135,11 @@ def validate(value):
         result['photos'] = valid_photos(value['photos'])
     if 'plugins' in value:
         result['plugins'] = valid_plugins(value['plugins'])
+    if 'ink' in value:
+        ink = value['ink']
+        if not isinstance(ink, str) or (ink and not INK.fullmatch(ink.lower())):
+            raise ValueError('screensaver ink')
+        result['ink'] = ink.lower()
     if 'seconds' in value:
         if not isinstance(value['seconds'], bool):
             raise ValueError('screensaver seconds')
@@ -383,6 +391,9 @@ def message(choice, states, pictures, short, media_extras, ground=None, keys=Fal
         chosen = face(choice) if faces and not own else None
         if chosen:
             result['cf'] = chosen
+        # The digits' colour (Slovak fork): only when it is not the screen's own white.
+        if choice.get('ink'):
+            result['ci'] = choice['ink'][1:]
         if own:
             result['pf'] = plugin_face(own, choice, clock_contract(degrees, row[1:] if degrees and row else row))
         return result

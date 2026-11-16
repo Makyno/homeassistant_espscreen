@@ -35,7 +35,7 @@ PLAYING = {'state': 'playing', 'attributes': {'friendly_name': 'Living room', 'm
                                               'media_duration': 200, 'entity_picture': '/api/media_player_proxy/x?cache=1'}}
 DOOR = {'state': 'idle', 'attributes': {'friendly_name': 'Front door'}}
 CHOICE = {'show': True, 'media': PLAYER, 'camera': CAMERA, 'order': ['media', 'photos', 'camera', 'clock'], 'off': [], 'weather': 'auto', 'more': [], 'items': [],
-          'face': 'digital', 'numerals': 4, 'seconds': True, 'look': 'dark',
+          'face': 'digital', 'numerals': 4, 'seconds': True, 'look': 'dark', 'ink': '',
           'photos': {'source': '', 'every': 60, 'order': 'shuffle', 'fit': 'auto', 'motion': 'still'}, 'media_face': '', 'photos_face': '', 'plugins': {}}
 
 
@@ -192,6 +192,20 @@ class Choice(unittest.TestCase):
         self.assertNotIn('cf', screen_saver.message({**clock, 'face': 'digital'}, {}, True, short, media_extras, faces=True))
         # A face is the clock's: a cover or a camera carries none.
         self.assertNotIn('cf', screen_saver.message({**CHOICE, 'face': 'glass'}, {PLAYER: PLAYING}, True, short, media_extras, faces=True))
+
+    def test_the_clock_digits_take_the_chosen_colour(self):
+        """`ink`: the digital clock's digits in a colour of one's own, sent as `ci` with the clock; '' keeps the white."""
+        self.assertEqual(screen_saver.DEFAULT['ink'], '')
+        self.assertEqual(screen_saver.validate({'ink': '#FF8C00'})['ink'], '#ff8c00')
+        self.assertEqual(screen_saver.validate({'ink': ''})['ink'], '')
+        for wrong in ({'ink': 'ff8c00'}, {'ink': '#ff8c0'}, {'ink': '#gg0000'}, {'ink': 1}, {'ink': None}):
+            with self.assertRaises(ValueError, msg=wrong):
+                screen_saver.validate(wrong)
+        clock = {**CHOICE, 'off': ['media', 'camera'], 'ink': '#ff8c00'}
+        self.assertEqual(screen_saver.message(clock, {}, True, short, media_extras)['ci'], 'ff8c00')
+        self.assertNotIn('ci', screen_saver.message({**clock, 'ink': ''}, {}, True, short, media_extras))
+        # The colour is the clock's: a cover carries none.
+        self.assertNotIn('ci', screen_saver.message({**CHOICE, 'ink': '#ff8c00'}, {PLAYER: PLAYING}, True, short, media_extras))
 
     def test_the_clock_shows_the_outside_temperature(self):
         """App 0.4.52: under the clock the outside temperature, whole degrees in Home Assistant's own unit, from its
