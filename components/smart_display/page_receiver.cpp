@@ -513,11 +513,14 @@ std::string receive(const std::string &payload) {
       }
       // The outside temperature under the clock (app 0.4.52, firmware 0.31.0+), ready to draw: "21°".
       if (next.kind == "clock") next.weather = string(root["w"], 8);
-      // The digits' colour (Slovak fork, app `ci`): six hex digits, RRGGBB; anything else keeps the white.
+      // The digits' colour by day and at night (Slovak fork, app `ci` and `cn`): six hex digits, RRGGBB; anything else
+      // keeps the white.
       if (next.kind == "clock") {
-        const std::string ci = string(root["ci"], 6);
-        if (ci.size() == 6 && ci.find_first_not_of("0123456789abcdefABCDEF") == std::string::npos)
-          next.ink = (int32_t) strtoul(ci.c_str(), nullptr, 16);
+        for (auto [key, ink] : {std::make_pair("ci", &next.ink), std::make_pair("cn", &next.ink_night)}) {
+          const std::string hex = string(root[key], 6);
+          if (hex.size() == 6 && hex.find_first_not_of("0123456789abcdefABCDEF") == std::string::npos)
+            *ink = (int32_t) strtoul(hex.c_str(), nullptr, 16);
+        }
       }
       // The row of entities (app 0.4.81, firmware 0.50.0+): the temperature first, as the top bar's text and moment
       // items; one that is not readable leaves the temperature alone on the glass, as before.

@@ -291,13 +291,14 @@ struct SaverChoice {
   roomy::Text plugin_options;
   // The photos step's photo moves slowly (app `x.mv`, picture_motion.h).
   bool motion = false;
-  // The digital clock's digits in a colour of one's own (Slovak fork, app `ci`): 0xRRGGBB, or -1 for the white.
-  int32_t ink = -1;
+  // The digital clock's digits in a colour of one's own (Slovak fork): by day (app `ci`) and in the screen's night
+  // hours (app `cn`), 0xRRGGBB each, or -1 for the white.
+  int32_t ink = -1, ink_night = -1;
   bool operator==(const SaverChoice &o) const {
     return kind == o.kind && entity == o.entity && name == o.name && title == o.title && artist == o.artist &&
            album == o.album && picture == o.picture && ground == o.ground && weather == o.weather && row == o.row &&
            state == o.state && features == o.features && muted == o.muted && face == o.face && plugin == o.plugin &&
-           plugin_data == o.plugin_data && motion == o.motion && ink == o.ink;
+           plugin_data == o.plugin_data && motion == o.motion && ink == o.ink && ink_night == o.ink_night;
   }
 };
 inline SaverChoice saver_next, saver_now;  // the app's latest word, and what the glass shows
@@ -13294,7 +13295,10 @@ inline void saver_clock_draw() {
   // the clock stood on the page's own colour, a lit white glass in the light look.
   lv_obj_set_style_bg_color(saver_root, theme::color(theme::CAMERA_PAGE), 0);
   // The digits in the colour chosen in the app (Slovak fork, `ci`); the date, AM/PM and the row a softer shade of it.
-  const uint32_t ink = saver_next.ink >= 0 ? (uint32_t) saver_next.ink : media_ink(),
+  // The night's colour in the screen's night hours, the day's the rest of the day: the clock is drawn whole every
+  // minute, so it turns at the night's edges.
+  const int32_t chosen = screen_settings::current.night(minute_of_day()) ? saver_next.ink_night : saver_next.ink;
+  const uint32_t ink = chosen >= 0 ? (uint32_t) chosen : media_ink(),
                  soft = theme::mix(ink, theme::hex(theme::CAMERA_PAGE), 150);
   const auto l = saver_view::clock(width, height, digits_h, date.empty() ? 0 : date_h, date.empty() ? 0 : gap);
   const int time_w = digits ? text_width(time, digits) : width;

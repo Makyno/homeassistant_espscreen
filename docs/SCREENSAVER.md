@@ -68,7 +68,8 @@ the camera or the clock, since a speaker stays paused in Home Assistant for days
   than white (a few ready ones or any other); the date, AM or PM and the bottom row follow in a softer shade of it.
   The choice keeps it as `ink` (`#rrggbb`, '' for white) and the clock's message carries it as `ci` (six hex digits);
   the screen reads it in `page_receiver.cpp` into `SaverChoice::ink` and `saver_clock_draw` draws with it. Firmware
-  without it reads past `ci` and stays white.
+  without it reads past `ci` and stays white. The night has a colour of its own (`ink_night`, `cn`), used in the
+  screen's night hours (`screen_settings::current.night`); each '' is white.
 
 **Entities on the clock** (app 0.4.81, firmware 0.50.0). In the drawer of Clock, under the temperature, **Add an
 entity** puts up to four entities in the same line as the temperature: a sensor, a door, a lamp, anything the top bar

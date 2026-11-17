@@ -107,9 +107,14 @@ const pickFace = (kind: SaverFaceKind) => screensaver.changeSaver({ face: kind }
 const withRow = computed(() => Boolean(pluginFace.value) || faceKind.value === "digital" || faceKind.value === "classic");
 // The digital clock's digits in a colour of one's own (Slovak fork, `ink`): a few that suit a dark bedroom, or any other.
 const digital = computed(() => !pluginFace.value && faceKind.value === "digital");
+// By day and in the screen's night hours, each its own ('' is white).
 const ink = computed(() => screensaver.saver?.ink || "");
-const INKS = ["", "#ff8c00", "#ff3b30", "#ffcc00", "#34c759", "#008dbe", "#af52de"];
-const pickInk = (value: string) => screensaver.changeSaver({ ink: value.toLowerCase() });
+const INKS = ["", "#ff8c00", "#ff3b30", "#a00000", "#ffcc00", "#34c759", "#008dbe", "#af52de"];
+const inkRows = computed(() => [
+  { name: "ink" as const, label: T("ink"), icon: "palette-outline" as const, value: screensaver.saver?.ink || "" },
+  { name: "ink_night" as const, label: T("ink_night"), icon: "palette-outline" as const, value: screensaver.saver?.ink_night || "" },
+]);
+const pickInk = (name: "ink" | "ink_night", value: string) => screensaver.changeSaver({ [name]: value.toLowerCase() });
 
 // The clock's place among the steps, as its own drawer had it.
 const place = computed(() => screensaver.stepPlace("clock"));
@@ -204,17 +209,20 @@ function move(step: number) { if (screensaver.moveSaverItem(props.index, props.i
           </PropRow>
           <SwitchRow :label="T('seconds')" :model-value="screensaver.saver.seconds ?? true" @update:model-value="(on: boolean) => screensaver.changeSaver({ seconds: on })" />
         </template>
-        <PropRow v-if="digital" :label="T('ink')" icon="palette-outline" stack>
-          <div class="ink-picks" id="saver-ink" role="radiogroup" :aria-label="T('ink')">
-            <button v-for="c in INKS" :key="c || 'white'" type="button" role="radio" class="ink-pick" :data-ink="c || 'white'"
-              :aria-checked="ink === c ? 'true' : 'false'" :title="c ? c : T('ink_white')" :style="{ background: c || '#ffffff' }" @click="pickInk(c)"></button>
-            <label class="ink-pick ink-own" :aria-checked="ink && !INKS.includes(ink) ? 'true' : 'false'" :title="T('ink_own')"
-              :style="ink && !INKS.includes(ink) ? { background: ink } : {}">
-              <Icon v-if="!ink || INKS.includes(ink)" name="plus" />
-              <input type="color" :aria-label="T('ink_own')" :value="ink || '#ffffff'" @change="pickInk(($event.target as HTMLInputElement).value)" />
-            </label>
-          </div>
-        </PropRow>
+        <template v-if="digital">
+          <PropRow v-for="row in inkRows" :key="row.name" :label="row.label" :icon="row.icon" stack>
+            <div class="ink-picks" :id="`saver-${row.name}`" role="radiogroup" :aria-label="row.label">
+              <button v-for="c in INKS" :key="c || 'white'" type="button" role="radio" class="ink-pick" :data-ink="c || 'white'"
+                :aria-checked="row.value === c ? 'true' : 'false'" :title="c ? c : T('ink_white')" :style="{ background: c || '#ffffff' }" @click="pickInk(row.name, c)"></button>
+              <label class="ink-pick ink-own" :aria-checked="row.value && !INKS.includes(row.value) ? 'true' : 'false'" :title="T('ink_own')"
+                :style="row.value && !INKS.includes(row.value) ? { background: row.value } : {}">
+                <Icon v-if="!row.value || INKS.includes(row.value)" name="plus" />
+                <input type="color" :aria-label="T('ink_own')" :value="row.value || '#ffffff'" @change="pickInk(row.name, ($event.target as HTMLInputElement).value)" />
+              </label>
+            </div>
+          </PropRow>
+          <small class="help">{{ T("ink_night_hint") }}</small>
+        </template>
         <PropRow v-if="withRow" :label="T('temperature')" stack>
           <UiSelect id="saver-weather" :model-value="screensaver.saver.weather ?? 'auto'" :options="screensaver.weatherChoices" @update:model-value="(value: string) => screensaver.changeSaver({ weather: value })" />
         </PropRow>

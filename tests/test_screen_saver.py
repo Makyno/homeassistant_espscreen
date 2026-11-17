@@ -35,7 +35,7 @@ PLAYING = {'state': 'playing', 'attributes': {'friendly_name': 'Living room', 'm
                                               'media_duration': 200, 'entity_picture': '/api/media_player_proxy/x?cache=1'}}
 DOOR = {'state': 'idle', 'attributes': {'friendly_name': 'Front door'}}
 CHOICE = {'show': True, 'media': PLAYER, 'camera': CAMERA, 'order': ['media', 'photos', 'camera', 'clock'], 'off': [], 'weather': 'auto', 'more': [], 'items': [],
-          'face': 'digital', 'numerals': 4, 'seconds': True, 'look': 'dark', 'ink': '',
+          'face': 'digital', 'numerals': 4, 'seconds': True, 'look': 'dark', 'ink': '', 'ink_night': '',
           'photos': {'source': '', 'every': 60, 'order': 'shuffle', 'fit': 'auto', 'motion': 'still'}, 'media_face': '', 'photos_face': '', 'plugins': {}}
 
 
@@ -204,6 +204,14 @@ class Choice(unittest.TestCase):
         clock = {**CHOICE, 'off': ['media', 'camera'], 'ink': '#ff8c00'}
         self.assertEqual(screen_saver.message(clock, {}, True, short, media_extras)['ci'], 'ff8c00')
         self.assertNotIn('ci', screen_saver.message({**clock, 'ink': ''}, {}, True, short, media_extras))
+        # At night a colour of its own: `cn`, also without a day colour.
+        self.assertEqual(screen_saver.validate({'ink_night': '#A00000'})['ink_night'], '#a00000')
+        night = screen_saver.message({**clock, 'ink': '', 'ink_night': '#a00000'}, {}, True, short, media_extras)
+        self.assertEqual((night.get('ci'), night['cn']), (None, 'a00000'))
+        self.assertNotIn('cn', screen_saver.message(clock, {}, True, short, media_extras))
+        for wrong in ({'ink_night': True}, {'ink_night': 'red'}):
+            with self.assertRaises(ValueError, msg=wrong):
+                screen_saver.validate(wrong)
         # The colour is the clock's: a cover carries none.
         self.assertNotIn('ci', screen_saver.message({**CHOICE, 'ink': '#ff8c00'}, {PLAYER: PLAYING}, True, short, media_extras))
 
